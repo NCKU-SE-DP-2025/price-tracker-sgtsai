@@ -1,52 +1,79 @@
 <template>
-  <nav class="navbar">
+  <nav class="navbar" ref="navbar">
     <div class="title">
-      <RouterLink to="/overview">價格追蹤小幫手</RouterLink>
+      <RouterLink to="/overview" @click="closeMenu">價格追蹤小幫手</RouterLink>
     </div>
 
     <div class="hamburger" @click="toggleMenu">
-      <i class="bi bi-list"></i>
+      <i class="bi bi-list" />
     </div>
 
     <ul :class="['options', { open: isMenuOpen }]">
-      <li><RouterLink to="/overview">物價概覽</RouterLink></li>
-      <li><RouterLink to="/trending">物價趨勢</RouterLink></li>
-      <li><RouterLink to="/news">相關新聞</RouterLink></li>
-      <li v-if="!isLoggedIn"><RouterLink to="/login">登入</RouterLink></li>
-      <li v-else @click="logout">Hi, {{ userName }}! 登出</li>
+      <li><RouterLink to="/overview" @click="closeMenu">物價概覽</RouterLink></li>
+      <li><RouterLink to="/trending" @click="closeMenu">物價趨勢</RouterLink></li>
+      <li><RouterLink to="/news" @click="closeMenu">相關新聞</RouterLink></li>
+      <li v-if="!isLoggedIn"><RouterLink to="/login" @click="closeMenu">登入</RouterLink></li>
+      <li v-else @click="handleLogout">Hi, {{ userName }}！登出</li>
     </ul>
   </nav>
 </template>
 
 <script>
-import { ref, computed } from 'vue';
-import { useAuthStore } from '@/stores/auth';
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
+import { useRoute } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 
 export default {
   name: 'NavBar',
   setup() {
-    const isMenuOpen = ref(false);
+    const isMenuOpen = ref(false)
+    const navbar = ref(null)
+
     const toggleMenu = () => {
-      isMenuOpen.value = !isMenuOpen.value;
-    };
+      isMenuOpen.value = !isMenuOpen.value
+    }
 
-    const authStore = useAuthStore();
-    const isLoggedIn = computed(() => authStore.isLoggedIn);
-    const userName = computed(() => authStore.getUserName);
+    const closeMenu = () => {
+      isMenuOpen.value = false
+    }
 
-    const logout = () => {
-      authStore.logout();
-    };
+    const handleClickOutside = (event) => {
+      if (navbar.value && !navbar.value.contains(event.target)) {
+        closeMenu()
+      }
+    }
+
+    onMounted(() => {
+      document.addEventListener('click', handleClickOutside)
+    })
+
+    onBeforeUnmount(() => {
+      document.removeEventListener('click', handleClickOutside)
+    })
+
+    const authStore = useAuthStore()
+    const isLoggedIn = computed(() => authStore.isLoggedIn)
+    const userName = computed(() => authStore.getUserName)
+
+    const handleLogout = () => {
+      authStore.logout()
+      closeMenu()
+    }
+
+    const route = useRoute()
+    watch(() => route.fullPath, closeMenu)
 
     return {
       isMenuOpen,
       toggleMenu,
+      closeMenu,
+      handleLogout,
       isLoggedIn,
       userName,
-      logout
-    };
+      navbar
+    }
   }
-};
+}
 </script>
 
 <style scoped>
@@ -81,10 +108,10 @@ export default {
   list-style: none;
   display: flex;
   justify-content: space-around;
+  transition: all 0.3s ease;
 }
 
 .options li {
-  color: #575B5D;
   margin: 0 0.5em;
   font-size: 1.2em;
 }
@@ -96,14 +123,15 @@ export default {
 
 .options a {
   text-decoration: none;
-  color: #575B5D;
+  color: #2c3e50; /* ✅ 強化文字顏色，避免背景色干擾 */
 }
 
 /* 🔽 RWD 漢堡選單樣式 */
 @media (max-width: 768px) {
   .hamburger {
-    display: block
+    display: block;
   }
+
   .options {
     position: absolute;
     top: 4.5em;
@@ -113,6 +141,7 @@ export default {
     background-color: #f3f3f3;
     display: none;
     padding: 1em;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   }
 
   .options.open {

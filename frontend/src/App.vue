@@ -1,18 +1,17 @@
 <template>
-  <NavBar class="navbar" />
-  <RouterView class="render" />
+  <NavBar class="navbar"></NavBar>
+  <RouterView class="render"></RouterView>
 </template>
 
 <script>
-import { defineComponent } from 'vue';
-import NavBar from './components/NavBar.vue';
-
-export default defineComponent({
+// import { RouterView } from 'vue-router';
+import NavBar from './components/NavBar.vue'
+export default {
   name: 'App',
   components: {
-    NavBar
+    NavBar,
   }
-});
+}
 </script>
 
 <style>
@@ -23,14 +22,12 @@ export default defineComponent({
   text-align: center;
   color: #2c3e50;
 }
-
-.navbar {
+.navbar{
   z-index: 1000;
   position: fixed;
   top: 0;
 }
-
-.render {
+.render{
   margin-top: 4.5em;
 }
 </style>
