@@ -36,14 +36,14 @@ def upvote_article(id: int, token: str = Depends(oauth2_scheme), db: Session = D
     message = NewsService(db, API_KEY).toggle_upvote(id, user.id)
     return {"message": message}
 
-@router.post("/news_summary")
+@router.post("/summary")
 def summarize_news(payload: NewsSummaryRequest, db: Session = Depends(get_db)):
     service = NewsService(db, API_KEY)
     return service.summarize_article([payload.content])
 
-@router.post("/search_news")
+@router.post("/search")
 def search_news(request: PromptRequest, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-    #user = UserService(db).decode_token(token)
+    user = UserService(db).decode_token(token)
     openai_util = OpenAIUtil(API_KEY)
     keywords = openai_util.extract_keywords(request.prompt)
 

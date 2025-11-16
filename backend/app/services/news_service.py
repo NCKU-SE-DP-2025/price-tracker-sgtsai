@@ -8,7 +8,6 @@ class NewsService:
     def __init__(self, db, api_key):
         self.db = db
         self.openai = OpenAIUtil(api_key)
-        self.scraper = ScraperUtil
 
     def add_article(self, article_data):
         article = NewsArticle(**article_data)
@@ -20,8 +19,8 @@ class NewsService:
 
     def process_news_item(self, news):
         relevance = self.openai.evaluate_relevance(news["title"])
-        #if relevance != "high":
-        #    return
+        if relevance != "high":
+            return
         article = ScraperUtil.fetch_article_content(news["titleLink"])
         summary = self.summarize_article(article["content"])
         article.update(summary)

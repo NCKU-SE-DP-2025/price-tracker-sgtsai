@@ -4,15 +4,10 @@ from sqlalchemy import create_engine, StaticPool
 from sqlalchemy.orm import sessionmaker
 import json
 from jose import jwt
-from app.main import app
-from app.db.base import Base
-from app.models.news import NewsArticle
-from app.models.user import User
-from app.models.association import user_news_association_table
-from app.core.security import pwd_context
-from app.db.session import session_opener
-from app.schemas.news import NewsSummaryRequest
-from app.schemas.prompt import PromptRequest
+from main import app
+from main import Base, NewsArticle, User, session_opener, user_news_association_table
+from main import NewsSumaryRequestSchema, PromptRequest
+from main import pwd_context
 from unittest.mock import Mock
 
 
@@ -92,7 +87,7 @@ def test_user_and_articles(test_user, test_articles):
 
 
 def test_read_news(test_articles):
-    response = client.get("/api/v1/news")
+    response = client.get("/api/v1/news/news")
     assert response.status_code == 200
     json_response = response.json()
     assert len(json_response) == 2
@@ -114,7 +109,7 @@ def test_read_user_news(test_user, test_token, test_articles):
     assert json_response[1]["is_upvoted"] is False
 
 def mock_openai(mocker, return_content):
-    mock_openai_client = mocker.patch('app.utils.openai_util.OpenAI')
+    mock_openai_client = mocker.patch('main.OpenAI')
 
     mock_message = Mock()
     mock_message.content = return_content
@@ -132,13 +127,11 @@ def mock_openai(mocker, return_content):
 def test_search_news(mocker):
     mock_openai(mocker, "keywords")
 
-    mock_process_news_item = mocker.patch(
-        "app.services.news_service.NewsService.process_news_item",
-        return_value={"title": "Test Title", "time": "2024-09-10", "content": "This is a test paragraph."}
-    )
+    mock_get_new_info = mocker.patch("main.get_new_info", return_value=[
+        {"titleLink": "http://example.com/news1"}
+    ])
 
-
-    mock_get = mocker.patch("app.utils.scraper.requests.get", return_value=mocker.Mock(
+    mock_get = mocker.patch("main.requests.get", return_value=mocker.Mock(
         text="""
         <html>
         <h1 class="article-content__title">Test Title</h1>
@@ -168,7 +161,7 @@ def test_news_summary(mocker, test_token):
     openai_response = json.dumps({"影響": "test impact", "原因": "test reason"})
     mock_openai(mocker, openai_response)
 
-    request_body = NewsSummaryRequest(content="Test news content")
+    request_body = NewsSumaryRequestSchema(content="Test news content")
     response = client.post("/api/v1/news/news_summary", json=request_body.dict(), headers=headers)
 
     assert response.status_code == 200

@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1 import users, news, prices
 from app.core.scheduler import start_scheduler, shutdown_scheduler
+
 app = FastAPI()
 
 app.add_middleware(

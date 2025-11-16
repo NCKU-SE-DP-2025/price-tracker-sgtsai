@@ -2,12 +2,10 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, StaticPool
 from sqlalchemy.orm import sessionmaker
-from app.main import app
-from app.db.base import Base
-from app.models.user import User
-from app.db.session import session_opener
+from main import app
+from main import Base, User, session_opener
 from jose import jwt
-from app.core.security import pwd_context
+from main import pwd_context
 
 SECRET_KEY = "1892dhianiandowqd0n"
 ALGORITHM = "HS256"
