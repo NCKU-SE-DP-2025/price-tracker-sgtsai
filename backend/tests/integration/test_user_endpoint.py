@@ -2,10 +2,12 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, StaticPool
 from sqlalchemy.orm import sessionmaker
-from main import app
-from main import Base, User, session_opener
+from app.main import app
+from app.db.base import Base
+from app.models.user import User
+from app.api.v1.users import get_db
 from jose import jwt
-from main import pwd_context
+from app.core.security import pwd_context
 
 SECRET_KEY = "1892dhianiandowqd0n"
 ALGORITHM = "HS256"
@@ -26,7 +28,7 @@ def override_session_opener():
         db.close()
 
 
-app.dependency_overrides[session_opener] = override_session_opener
+app.dependency_overrides[get_db] = override_session_opener
 
 client = TestClient(app)
 

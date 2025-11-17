@@ -8,6 +8,7 @@ class NewsService:
     def __init__(self, db, api_key):
         self.db = db
         self.openai = OpenAIUtil(api_key)
+        self.scraper = ScraperUtil
 
     def add_article(self, article_data):
         article = NewsArticle(**article_data)
@@ -59,13 +60,13 @@ class NewsService:
             for article in articles
         ]
 
-        def get_user_news(self, user):
-            articles = self.db.query(NewsArticle).order_by(NewsArticle.time.desc()).all()
-            return [
-                {
-                    **article.__dict__,
-                    "upvotes": len(article.upvoted_by_users),
-                    "is_upvoted": user in article.upvoted_by_users
-                }
-                for article in articles
-            ]
+    def get_user_news(self, user):
+        articles = self.db.query(NewsArticle).order_by(NewsArticle.time.desc()).all()
+        return [
+            {
+                **article.__dict__,
+                "upvotes": len(article.upvoted_by_users),
+                "is_upvoted": user in article.upvoted_by_users
+            }
+            for article in articles
+        ]

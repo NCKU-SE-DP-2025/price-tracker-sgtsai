@@ -6,6 +6,7 @@ from app.db.session import SessionLocal
 from app.core.security import hash_password, verify_password, create_access_token
 from app.services.user_service import UserService
 from app.models.user import User
+from jose import jwt
 
 router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/users/login")
@@ -16,6 +17,13 @@ def get_db():
         yield db
     finally:
         db.close()
+
+def authenticate_user_token(
+    token = Depends(oauth2_scheme),
+    db = Depends(get_db)
+):
+    payload = jwt.decode(token, '1892dhianiandowqd0n', algorithms=["HS256"])
+    return db.query(User).filter(User.username == payload.get("sub")).first()
 
 @router.post("/register")
 def register(user: UserAuthSchema, db: Session = Depends(get_db)):
@@ -35,6 +43,6 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     return {"access_token": token, "token_type": "bearer"}
 
 @router.get("/me")
-def read_users_me(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-    user = UserService(db).decode_token(token)
+def read_users_me(user = Depends(authenticate_user_token), db: Session = Depends(get_db)):
     return {"username": user.username}
+
