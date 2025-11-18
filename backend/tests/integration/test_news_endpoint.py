@@ -78,11 +78,15 @@ def test_articles():
             summary="Test summary 2",
             reason="Test reason 2"
         )
-        db.add_all([article_1, article_2])
+        db.add(article_1)
+        db.add(article_2)
         db.commit()
         db.refresh(article_1)
         db.refresh(article_2)
-
+        response = client.get("/api/v1/news/news")
+        assert response.status_code == 200
+        json_response = response.json()
+        assert len(json_response) == 2
         return [article_1, article_2]
 
 
