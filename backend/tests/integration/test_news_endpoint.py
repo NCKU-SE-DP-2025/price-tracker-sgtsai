@@ -10,7 +10,7 @@ from app.models.news import NewsArticle
 from app.models.user import User
 from app.models.association import user_news_association_table
 from app.core.security import pwd_context
-from app.api.v1.users import get_db
+from app.api.v1.news import get_db
 from app.schemas.news import NewsSummaryRequest
 from app.schemas.prompt import PromptRequest
 from unittest.mock import Mock
@@ -132,39 +132,41 @@ def mock_openai(mocker, return_content):
     mock_openai_client.return_value.chat.completions.create.return_value = mock_completion
 
     return mock_openai_client
-
 def test_search_news(mocker):
-    mock_openai(mocker, "keywords")
+    # 1. Mock OpenAIUtil.extract_keywords
+    mock_openai = mocker.patch("app.api.v1.news.OpenAIUtil")
+    mock_openai.return_value.extract_keywords.return_value = "mocked keywords"
 
-    mock_search_news = mocker.patch("app.api.v1.news.search_news", return_value=[
-    {"titleLink": "http://example.com/news1"}
-])
+    # 2. Mock get_new_info to avoid real UDN API calls
+    mocker.patch("app.api.v1.news.get_new_info", return_value=[
+        {"titleLink": "http://example.com/news1"}
+    ])
 
+    # 3. Mock NewsService.scraper.fetch_article_content
+    mock_service = mocker.patch("app.api.v1.news.NewsService")
+    mock_instance = mock_service.return_value
+    mock_instance.scraper.fetch_article_content.return_value = {
+        "title": "Test Title",
+        "time": "2024-09-10",
+        "content": "Test content"
+    }
 
-    mock_get = mocker.patch("app.services.price_service.requests.get", return_value=mocker.Mock(
-        text="""
-        <html>
-        <h1 class="article-content__title">Test Title</h1>
-        <time class="article-content__time">2024-09-10</time>
-        <section class="article-content__editor">
-            <p>This is a test paragraph.</p>
-        </section>
-        </html>
-        """
-    ))
+    # 4. Mock NewsService.summarize_article
+    mock_instance.summarize_article.return_value = {
+        "summary": "Test summary",
+        "reason": "Test reason"
+    }
 
-    request_body = {"prompt": "Test search prompt"}
-
-    response = client.post("/api/v1/news/search_news", json=request_body)
-
+    # 5. Call endpoint
+    response = client.post("/api/v1/news/search_news", json={"prompt": "Test prompt"})
     assert response.status_code == 200
-
     data = response.json()
+
+    # 6. Assertions
     assert len(data) == 1
     assert data[0]["title"] == "Test Title"
-    assert data[0]["time"] == "2024-09-10"
-    assert data[0]["content"] == "This is a test paragraph."
-
+    assert data[0]["summary"] == "Test summary"
+    assert data[0]["reason"] == "Test reason"
 
 def test_news_summary(mocker, test_token):
     headers = {"Authorization": f"Bearer {test_token}"}
@@ -178,7 +180,6 @@ def test_news_summary(mocker, test_token):
     json_response = response.json()
     assert json_response["summary"] == "test impact"
     assert json_response["reason"] == "test reason"
-
 
 def test_upvote_article(test_user_and_articles, test_token):
     user, articles = test_user_and_articles
