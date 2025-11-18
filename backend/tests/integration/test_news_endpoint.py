@@ -102,7 +102,7 @@ def test_read_news(test_articles):
 
 def test_read_user_news(test_user, test_token, test_articles):
     headers = {"Authorization": f"Bearer {test_token}"}
-    response = client.get("/api/v1/news/user_news", headers=headers)
+    response = client.get("/api/v1/news/user_news", headers = headers)
     print(test_token)
     print(response.json())
     assert response.status_code == 200

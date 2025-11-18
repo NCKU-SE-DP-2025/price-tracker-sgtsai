@@ -14,6 +14,7 @@ class NewsService:
         article = NewsArticle(**article_data)
         self.db.add(article)
         self.db.commit()
+        self.db.close()
 
     def summarize_article(self, content):
         return self.openai.generate_summary(" ".join(content))
@@ -56,7 +57,11 @@ class NewsService:
     def get_all_news(self):
         articles = self.db.query(NewsArticle).order_by(NewsArticle.time.desc()).all()
         return [
-            {**article.__dict__, "upvotes": len(article.upvoted_by_users)}
+            {
+                **article.__dict__,
+                "upvotes": len(article.upvoted_by_users),
+                "is_upvoted": False
+            }
             for article in articles
         ]
 

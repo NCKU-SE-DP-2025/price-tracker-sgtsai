@@ -32,7 +32,7 @@ app.dependency_overrides[get_db] = override_session_opener
 
 client = TestClient(app)
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope = "module")
 def clear_users():
     with next(override_session_opener()) as db:
         db.query(User).delete()

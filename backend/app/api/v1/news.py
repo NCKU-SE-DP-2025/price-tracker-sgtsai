@@ -9,6 +9,7 @@ from app.services.news_service import NewsService
 from app.services.user_service import UserService
 from app.utils.openai_util import OpenAIUtil
 from app.core.config import API_KEY
+from app.api.v1.users import authenticate_user_token
 import requests
 from openai import OpenAI
 router = APIRouter()
@@ -21,20 +22,18 @@ def get_db():
     finally:
         db.close()
 
-@router.get("/all")
+@router.get("/news")
 def read_news(db: Session = Depends(get_db)):
     service = NewsService(db, API_KEY)
     return service.get_all_news()
 
-@router.get("/user")
-def read_user_news(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-    user = UserService(db).decode_token(token)
+@router.get("/user_news")
+def read_user_news(db: Session = Depends(get_db), user = Depends(authenticate_user_token)):
     service = NewsService(db, API_KEY)
     return service.get_user_news(user)
 
 @router.post("/{id}/upvote")
-def upvote_article(id: int, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-    user = UserService(db).decode_token(token)
+def upvote_article(id: int, db: Session = Depends(get_db), user = Depends(authenticate_user_token)):
     message = NewsService(db, API_KEY).toggle_upvote(id, user.id)
     return {"message": message}
 
