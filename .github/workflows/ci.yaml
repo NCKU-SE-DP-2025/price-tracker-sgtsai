@@ -5,7 +5,7 @@ on:
     branches:
       - 'main'
       - 'develop'
-      - 'fix-integration-test' # add this line
+      - 'fix-intergration-test' # add this line
   pull_request:
     branches:
       - 'main'
