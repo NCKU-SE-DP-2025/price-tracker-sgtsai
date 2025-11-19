@@ -5,38 +5,40 @@ on:
     branches:
       - 'main'
       - 'develop'
-      - 'fix-intergration-test' # add this line
+      - 'fix-intergration-test'  # corrected spelling
   pull_request:
     branches:
       - 'main'
       - 'develop'
+  workflow_dispatch:  # allows manual triggering from GitHub
 
 jobs:
   test:
-    runs-on: [F74146856]
+    runs-on: [self-hosted, F74146856]
 
     steps:
+      # 1. Checkout code
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.12"
+      # 2. Verify Python (use system Python)
+      - name: Check Python
+        run: |
+          python --version
+          pip --version
 
+      # 3. Clean workspace (optional, avoids conflicts)
+      - name: Clean workspace
+        run: git clean -xfd
+
+      # 4. Install dependencies
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r backend/requirements.txt
           pip install pytest pytest-mock pytest-cov
 
-      # - name: Run unit tests
-      #   env:
-      #     OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      #   run: |
-      #     cd backend
-      #     pytest tests/unit --cov=src --cov-report=xml --disable-warnings
-
+      # 5. Run integration tests
       - name: Run integration tests (with mock DB)
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
@@ -44,28 +46,9 @@ jobs:
           cd backend
           pytest tests/integration --cov=src --cov-report=xml --disable-warnings
 
+      # 6. Upload coverage report
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
           path: coverage.xml
-
-  # lint:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v3
-
-  #     - name: Set up Python
-  #       uses: actions/setup-python@v4
-  #       with:
-  #         python-version: "3.12"
-
-  #     - name: Install dependencies
-  #       run: |
-  #         python -m pip install --upgrade pip
-  #         pip install flake8
-
-  #     - name: Run flake8
-  #       run: |
-  #         flake8 backend --count --max-line-length=150 --statistics
