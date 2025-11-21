@@ -23,9 +23,17 @@ jobs:
       - name: Pre-clean workspace
         shell: powershell
         run: |
-          try { taskkill /IM python.exe /F -ErrorAction Stop } catch { Write-Host "python.exe not running" }
-          try { taskkill /IM python3.exe /F -ErrorAction Stop } catch { Write-Host "python3.exe not running" }
-          try { taskkill /IM pytest.exe /F -ErrorAction Stop } catch { Write-Host "pytest.exe not running" }
+          # Kill python.exe if running
+          $p = Get-Process python -ErrorAction SilentlyContinue
+          if ($p) { Stop-Process -Id $p.Id -Force }
+
+          # Kill python3.exe if running
+          $p3 = Get-Process python3 -ErrorAction SilentlyContinue
+          if ($p3) { Stop-Process -Id $p3.Id -Force }
+
+          # Kill pytest.exe if running
+          $pp = Get-Process pytest -ErrorAction SilentlyContinue
+          if ($pp) { Stop-Process -Id $pp.Id -Force }
 
       # -------------------------
       # Checkout Code
@@ -74,6 +82,14 @@ jobs:
         if: always()
         shell: powershell
         run: |
-          try { taskkill /IM python.exe /F -ErrorAction Stop } catch { Write-Host "python.exe not running" }
-          try { taskkill /IM python3.exe /F -ErrorAction Stop } catch { Write-Host "python3.exe not running" }
-          try { taskkill /IM pytest.exe /F -ErrorAction Stop } catch { Write-Host "pytest.exe not running" }
+          # Kill python.exe if running
+          $p = Get-Process python -ErrorAction SilentlyContinue
+          if ($p) { Stop-Process -Id $p.Id -Force }
+
+          # Kill python3.exe if running
+          $p3 = Get-Process python3 -ErrorAction SilentlyContinue
+          if ($p3) { Stop-Process -Id $p3.Id -Force }
+
+          # Kill pytest.exe if running
+          $pp = Get-Process pytest -ErrorAction SilentlyContinue
+          if ($pp) { Stop-Process -Id $pp.Id -Force }
