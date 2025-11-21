@@ -5,7 +5,8 @@ on:
     branches:
       - 'main'
       - 'develop'
-      - 'fix-intergration-test' # add this line
+      - 'fix-intergration-test'
+      - 'refactor-crawler-oop-implementation'
   pull_request:
     branches:
       - 'main'
