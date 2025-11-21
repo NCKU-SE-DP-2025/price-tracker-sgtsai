@@ -18,14 +18,14 @@ jobs:
 
     steps:
       # -------------------------
-      # PRE-CLEAN (Fix for EPERM)
+      # PRE-CLEAN (stop any stale Python/pytest processes)
       # -------------------------
-      - name: Pre-clean workspace (stop stale Python processes)
-        if: always()
+      - name: Pre-clean workspace
+        shell: powershell
         run: |
-          taskkill /IM python.exe /F 2>$null
-          taskkill /IM python3.exe /F 2>$null
-          taskkill /IM pytest.exe /F 2>$null
+          try { taskkill /IM python.exe /F -ErrorAction Stop } catch { Write-Host "python.exe not running" }
+          try { taskkill /IM python3.exe /F -ErrorAction Stop } catch { Write-Host "python3.exe not running" }
+          try { taskkill /IM pytest.exe /F -ErrorAction Stop } catch { Write-Host "pytest.exe not running" }
 
       # -------------------------
       # Checkout Code
@@ -68,11 +68,12 @@ jobs:
           path: coverage.xml
 
       # -------------------------
-      # POST-CLEAN (Fix EPERM locks)
+      # POST-CLEAN (stop any lingering Python/pytest processes)
       # -------------------------
-      - name: Kill Python/pytest processes to avoid EPERM cleanup errors
+      - name: Post-clean workspace
         if: always()
+        shell: powershell
         run: |
-          taskkill /IM python.exe /F 2>$null; if ($LASTEXITCODE -ne 0) { Write-Host "python already stopped" }
-          taskkill /IM python3.exe /F 2>$null; if ($LASTEXITCODE -ne 0) { Write-Host "python3 already stopped" }
-          taskkill /IM pytest.exe /F 2>$null; if ($LASTEXITCODE -ne 0) { Write-Host "pytest already stopped" }
+          try { taskkill /IM python.exe /F -ErrorAction Stop } catch { Write-Host "python.exe not running" }
+          try { taskkill /IM python3.exe /F -ErrorAction Stop } catch { Write-Host "python3.exe not running" }
+          try { taskkill /IM pytest.exe /F -ErrorAction Stop } catch { Write-Host "pytest.exe not running" }
